@@ -1,0 +1,346 @@
+<template>
+    <CrissCrosser
+        v-slot="{
+            game,
+        }"
+        ref="cc"
+        :config="config"
+        @user-move="userMove"
+    >
+        <p>Block removal game played by sliding blocks into the following patterns to destroy blocks</p>
+        <div class="pattern-container">
+            <table
+                v-for="(pattern, i) in config.patterns.primary"
+                :key="`pattern-${i}`"
+                class="pattern"
+            >
+                <tr
+                    v-for="(row, j) in pattern"
+                    :key="`row-${i}-${j}`"
+                >
+                    <td
+                        v-for="(block, k) in row"
+                        :key="`block-${i}-${j}-${k}`"
+                        class="e-block"
+                        :class="block ? 'full' : 'empty'"
+                    />
+                </tr>
+            </table>
+        </div>
+        <div class="game-container">
+            <div
+                v-for="(piece, i) in game.pieces"
+                :key="`piece-${i}`"
+                :column="piece.column"
+                :row="piece.row"
+                class="game-piece"
+                :class="`block-${piece.data}`"
+                :style="{ width: `${piece.width}px`, height: `${piece.height}px`, left: `${piece.x}px`, top: `${piece.y}px` }"
+                @mousedown="onDown"
+                @touchstart="onDown"
+            />
+        </div>
+    </CrissCrosser>
+</template>
+
+<script>
+    import { uniq, flatten } from 'lodash';
+    import { transpose } from 'lodash-transpose';
+    import { TweenLite, Sine } from 'gsap';
+    import CrissCrosser from './CrissCrosser.js';
+    import config from './config/crush.json';
+    export default {
+        components: {
+            CrissCrosser,
+        },
+        props: {
+            configOverride: Object,
+        },
+        data () {
+            return {
+                config: this.configOverride ? this.configOverride : config,
+                processingMove: false,
+                animated: true,
+                movesRemaining: 20,
+                dropDuration: .5,
+                pointsPerBlock: 10,
+                points: 0,
+                boardState: [],
+                patterns: [],
+                basePatterns: [],
+                bonusPattern: [],
+                validValues: [],
+            };
+        },
+        computed: {
+            game () {
+                return this.$refs.cc.game;
+            },
+        },
+        mounted () {
+            console.log(this.game);
+            this.validValues = uniq(this.game.pieces.map(item => item.data));
+            this.setPatterns(this.config.patterns.primary);
+        },
+        methods: {
+            onDown (e) {
+                console.log('before down');
+                this.boardState = this.game.pieces.map(item => item.data);
+                this.$refs.cc.down(e);
+            },
+            userMove (e) {
+                console.log('after up');
+                this.evaluate(this.game.matrix);
+                if (this.isValidMove() && this.movesRemaining > 0) {
+                    this.movesRemaining--;
+                }
+                if (this.movesRemaining === 0) {
+                    console.log('you lose');
+                }
+            },
+            evaluate (matrix) {
+                this.processingMove = true;
+                const { results, foundPatterns } = this.scanBoard(matrix.map(item => item.map(_item => _item.data)));
+                console.log(foundPatterns);
+                this.resetValues();
+                // console.log(transpose(matrix));
+                const removals = this.updateBlocks(results);
+                this.points += flatten(results).length * this.pointsPerBlock;
+                const bonuses = this.getBonuses(foundPatterns);
+                if (bonuses) {
+                    this.awardBonus();
+                }
+                return { foundPatterns, results, removals, bonuses };
+            },
+            awardBonus () {
+                console.log('AWARD BONUSES');
+                this.movesRemaining += 2;
+            },
+            getBonuses (foundPatterns) {
+                const bonusPatternString = this.bonusPattern.join('-');
+                return foundPatterns.filter(item => item.join('-') === bonusPatternString).length;
+            },
+            isValidMove () {
+                const currentState = this.game.pieces.map(item => item.data);
+                return JSON.stringify(currentState) !== JSON.stringify(this.boardState);
+            },
+            resetValues () {
+                this.game.matrix.map((item, index) => item.forEach(_item => {
+                    _item.y = (this.game.height / this.game.matrix.length) * index;
+                    console.log(_item.y);
+                }));
+            },
+            findPattern (pattern, structure, value) {
+                const remappedStructure = structure.map(row => row.map(item => item === value));
+                const flattedStructure = flatten(remappedStructure.map((item, i) => item.map((value, j) => ({ value, i, j }))));
+                return flattedStructure
+                    .filter(item => this.patternMatch(remappedStructure, pattern, item.i, item.j))
+                    .map(item => this.cellsToRemove(item.i, item.j, pattern));
+            },
+            patternMatch (structure, patternRows, row, column) {
+                // let checks = []
+                if (patternRows.length + row > structure.length) {
+                    return false;
+                }
+                if (patternRows.filter((item, i) => !this.rowCheck(structure, row + i, item, column)).length > 0) {
+                    return false;
+                }
+                return true;
+            },
+            rowCheck (structure, row, slots, offset) {
+                const maxFill = offset + slots.length;
+                if (maxFill > structure.length) {
+                    return false;
+                }
+                const newRow = structure[row];
+                for (let i = offset; i < slots.length + offset; i++) {
+                    if (!newRow[i] && slots[i - offset]) {
+                        return false;
+                    }
+                }
+                return newRow;
+            },
+            cellsToRemove (row, column, pattern) {
+                return flatten(pattern.map((item, i) => item.map((_item, j) => ({ row: i + row, column: j + column, valid: _item }))))
+                    .filter(item => item.valid)
+                    .map(item => ({ row: item.row, column: item.column }));
+            },
+            scanBoard (structure) {
+                const patternsWithMatches = this.patterns.map(pattern => (
+                    {
+                        match: flatten([...Array(structure.length).keys()].map(item => this.findPattern(pattern, structure, item.toString()))),
+                        pattern,
+                    }
+                ));
+                const matches = patternsWithMatches.map(item => item.match);
+                const foundPatterns = patternsWithMatches
+                    .filter(item => item.match.length > 0)
+                    .map(item => item.pattern);
+                const results = uniq(flatten(matches).map(item => JSON.stringify(item))).map(item => JSON.parse(item));
+                return { results, foundPatterns };
+            },
+            setPatterns (patterns) {
+                this.basePatterns = patterns;
+                this.patterns = this.bonusPattern.length ? [...this.basePatterns, ...[this.bonusPattern]] : this.basePatterns;
+            },
+            setBonusPattern (pattern) {
+                this.bonusPattern = pattern;
+                this.patterns = this.bonusPattern.length ? [...this.basePatterns, ...[this.bonusPattern]] : this.basePatterns;
+            },
+            updateBlocks (results) {
+                const shouldAnimate = results.length;
+                console.log(shouldAnimate);
+                const transposedMatrix = transpose(this.game.matrix);
+                const flattenedResults = flatten(results);
+                const removalPositions = flattenedResults.map(item => ({
+                    x: item.column * (this.game.width / this.game.matrix[0].length),
+                    y: item.row * (this.game.height / this.game.matrix[0].length),
+                    data: this.game.pieces.find(_item => _item.column === item.column && _item.row === item.row).data,
+                }));
+                const mappedResults = new Set(flattenedResults.map(item => `${item.column}_${item.row}`));
+                const removeMarked = transposedMatrix.map(item => item.map((_item, index) => {
+                    const shouldRemove = mappedResults.has(`${_item.column}_${_item.row}`);
+                    _item.order = shouldRemove ? 0 : index + 1;
+                    if (shouldRemove) {
+                        _item.y = -1000;
+                    }
+                    return _item;
+                })).map(item => {
+                    const remove = item.filter(_item => _item.order === 0);
+                    const keep = item.filter(_item => _item.order !== 0);
+                    return [...remove, ...keep];
+                });
+                const reordered = removeMarked.map(item => {
+                    item.reverse();
+                    item.map((_item, index) => {
+                        if (_item.order === 0) {
+                            if (index === 0) {
+                                _item.order = -1;
+                            }
+                            else if (item[index - 1].order <= 0) {
+                                _item.order = item[index - 1].order - 1;
+                            }
+                            else {
+                                _item.order = -1;
+                            }
+                        }
+                        return _item;
+                    });
+                    item.reverse();
+                    return item;
+                })
+                    .map(item => item.map((_item, index) => {
+                        _item.row = index;
+                        if (shouldAnimate) {
+                            _item.drop = (this.game.height / this.game.matrix.length) * index;
+                        }
+                        else {
+                            _item.y = (this.game.height / this.game.matrix.length) * index;
+                        }
+                        if (_item.order && _item.order <= 0) {
+                            if (shouldAnimate) {
+                                _item.y = _item.order * (this.game.height / this.game.matrix.length);
+                            }
+                            _item.data = this.validValues[Math.floor(Math.random() * this.validValues.length)];
+                        }
+                        console.log(_item.y);
+                        return _item;
+                    }));
+                this.game.matrix = transpose(reordered);
+                this.game.pieces = flatten(this.game.matrix);
+                this.$forceUpdate();
+                console.log(JSON.parse(JSON.stringify(this.game.matrix)));
+                console.log(JSON.parse(JSON.stringify(this.game.pieces)));
+                if (shouldAnimate) {
+                    for (let i = 0; i < this.game.pieces.length; i++) {
+                        const targetY = this.game.pieces[i].drop;
+                        TweenLite.to(this.game.pieces[i], this.dropDuration, {
+                            y: targetY,
+                            ease: Sine.easeIn,
+                            onUpdate: () => {
+                                this.$forceUpdate();
+                            },
+                            onComplete: () => {
+                                if (i === this.game.pieces.length - 1) {
+                                    if (this.completeHandler) {
+                                        this.completeHandler();
+                                    }
+                                    const evaluation = this.evaluate(this.game.matrix);
+                                    if (this.completeHandler) {
+                                        this.completeHandler(evaluation);
+                                    }
+                                }
+                            },
+                        });
+                        this.game.pieces[i].drop = null;
+                        this.game.pieces[i].order = null;
+                    }
+                }
+                else {
+                    this.processingMove = false;
+                }
+                return removalPositions;
+            },
+        },
+    };
+</script>
+
+<style scoped>
+.game-container{
+    position: relative;
+}
+.game-piece{
+    position:absolute;
+    box-shadow: 0 0 0 1px #000000 inset;
+}
+.overlay{
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    background-color:rgba(0,0,0,.25);
+}
+.block-0{
+    background-color: #104577;
+}
+.block-1{
+    background-color: #7cb5d2;
+}
+.block-2{
+    background-color: #18a68d;
+}
+.block-3{
+    background-color: #96ceb7;
+}
+.block-4{
+    background-color: #ac2324;
+}
+.block-5{
+    background-color: #bb94b7;
+}
+.block-6{
+    background-color: #bdd74b;
+}
+.block-7{
+    background-color: #fce05e;
+}
+.pattern-container{
+    display:flex;
+    align-items:center;
+}
+.pattern {
+    padding: 0 6px;
+}
+.pattern .e-block {
+    width: 10px;
+    height: 10px;
+    border: .5px solid #ffffff;
+}
+.pattern .e-block.full{
+    background-color: #000000;
+}
+.game-container{
+  width: 360px;
+}
+</style>
