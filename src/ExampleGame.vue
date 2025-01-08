@@ -50,12 +50,17 @@
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300..700&family=Yarndings+12&display=swap');
 .game-container{
     position: relative;
+    font-family: "Yarndings 12", serif;
 }
 .game-piece{
     position:absolute;
-    box-shadow: 0 0 0 1px #000000 inset;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
 }
 .overlay{
     position:fixed;
