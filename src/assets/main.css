@@ -24,8 +24,3 @@ a,
   width: 300px;
   margin: 0 auto;
 }
-p,h1{
-  margin: 0 auto;
-  max-width: 80%;
-  text-align: center;
-}
