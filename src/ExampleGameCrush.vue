@@ -342,6 +342,7 @@
     justify-content: center;
     align-items:center;
     margin: 0 auto;
+    padding: 8px 0;
 }
 .pattern {
     padding: 0 6px;
