@@ -4,39 +4,39 @@
     "randomizeOnStart": true,
     "pieces": [
         [
-            "one",
-            "one",
-            "one",
-            "one",
-            "one"
+            "a",
+            "a",
+            "a",
+            "a",
+            "a"
         ],
         [
-            "two",
-            "two",
-            "two",
-            "two",
-            "two"
+            "b",
+            "b",
+            "b",
+            "b",
+            "b"
         ],
         [
-            "three",
-            "three",
-            "three",
-            "three",
-            "three"
+            "c",
+            "c",
+            "c",
+            "c",
+            "c"
         ],
         [
-            "four",
-            "four",
-            "four",
-            "four",
-            "four"
+            "d",
+            "d",
+            "d",
+            "d",
+            "d"
         ],
         [
-            "five",
-            "five",
-            "five",
-            "five",
-            "five"
+            "e",
+            "e",
+            "e",
+            "e",
+            "e"
         ]
     ]
 

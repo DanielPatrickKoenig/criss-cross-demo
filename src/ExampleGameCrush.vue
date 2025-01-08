@@ -7,7 +7,6 @@
         :config="config"
         @user-move="userMove"
     >
-        <p>Block removal game played by sliding blocks into the following patterns to destroy blocks</p>
         <div class="pattern-container">
             <table
                 v-for="(pattern, i) in config.patterns.primary"
@@ -291,7 +290,20 @@
 }
 .game-piece{
     position:absolute;
-    box-shadow: 0 0 0 1px #000000 inset;
+}
+.game-piece::after{
+    content: '';
+    display: block;
+    position: absolute;
+    width: 90%;
+    height: 90%;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    background-color: #000000;
+    border-radius: 5px;
+    box-shadow: 0 -3px 5px 3px rgba(0, 0, 0, .2) inset, 0 0 0 1px rgba(0, 0, 0, .6) inset;
 }
 .overlay{
     position:fixed;
@@ -301,33 +313,35 @@
     bottom:0;
     background-color:rgba(0,0,0,.25);
 }
-.block-0{
+.block-0::after{
     background-color: #104577;
 }
-.block-1{
+.block-1::after{
     background-color: #7cb5d2;
 }
-.block-2{
+.block-2::after{
     background-color: #18a68d;
 }
-.block-3{
+.block-3::after{
     background-color: #96ceb7;
 }
-.block-4{
+.block-4::after{
     background-color: #ac2324;
 }
-.block-5{
+.block-5::after{
     background-color: #bb94b7;
 }
-.block-6{
+.block-6::after{
     background-color: #bdd74b;
 }
-.block-7{
+.block-7::after{
     background-color: #fce05e;
 }
 .pattern-container{
     display:flex;
+    justify-content: center;
     align-items:center;
+    margin: 0 auto;
 }
 .pattern {
     padding: 0 6px;
@@ -335,12 +349,11 @@
 .pattern .e-block {
     width: 10px;
     height: 10px;
-    border: .5px solid #ffffff;
 }
 .pattern .e-block.full{
     background-color: #000000;
 }
 .game-container{
-  width: 360px;
+  width: 320px;
 }
 </style>
