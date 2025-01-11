@@ -2,7 +2,18 @@
     <div id="app">
         <h1><span class="grid-text-3">&nbsp;</span><span class="grid-text-2">&nbsp;</span><span class="grid-text-1">&nbsp;</span>Criss Cross Crush<span class="grid-text-1">&nbsp;</span><span class="grid-text-2">&nbsp;</span><span class="grid-text-3">&nbsp;</span></h1>
         <p>Block removal game played by sliding blocks into the following patterns to destroy blocks</p>
-        <ExampleGameCrush />
+        <ExampleGameCrush
+            v-if="active"
+            :level="mode"
+        />
+        <div class="level-selector">
+            <p>Current Level: {{ mode }}</p>
+            <ul>
+                <li v-for="level in [0, 1, 2]" :key="level">
+                    <button @click="updateLevel(level)">level {{ level + 1 }}</button>
+                </li>
+            </ul>
+        </div>
     </div>
 </template>
 
@@ -16,7 +27,16 @@
         data () {
             return {
                 mode: 0,
+                active: true,
             };
+        },
+        methods: {
+            async updateLevel (lvl) {
+                this.active = false;
+                this.mode = lvl;
+                await new Promise(resolve => setTimeout(resolve, 100));
+                this.active = true;
+            } 
         },
     };
 </script>
@@ -61,5 +81,30 @@ p{
     margin: 0 auto;
     text-align:  center;
     font-family: "Patua One", serif;
+}
+.level-selector{
+    left: 0;
+    right: 0;
+    top: 550px;
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+}
+.level-selector p{
+    text-align: center;
+}
+.level-selector ul{
+    display: flex;
+    justify-content: center;
+    padding: 0;
+    margin: 4px auto 0;
+
+}
+.level-selector ul li{
+    display: block;
+    margin: 0;
+    padding: 4px;
 }
 </style>
