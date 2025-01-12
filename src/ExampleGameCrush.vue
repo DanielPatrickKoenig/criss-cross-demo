@@ -50,7 +50,6 @@
                     height: `${game.pieces[0].height}px`
                 }"
             >
-                {{ i }}
             </div>
         </div>
     </CrissCrosser>
@@ -393,5 +392,40 @@ hr{
     justify-content: center;
     align-items: center;
     pointer-events: none;
+
+}
+
+.removal-graphic img{
+    width: 100%;
+    height: 100%;
+}
+
+@keyframes removal {
+    0%{
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    100%{
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+    }
+}
+
+.removal-graphic::after{
+    content: '';
+    display: block;
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    background-color: transparent;
+    border-radius: 5px;
+    box-shadow: 0 0 5px 3px #ff3300, 0 0 10px 6px #ffcc00;
+    animation: removal;
+    animation-iteration-count: infinite;
+    animation-duration: .5s;
 }
 </style>
