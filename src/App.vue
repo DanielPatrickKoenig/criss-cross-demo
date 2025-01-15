@@ -85,7 +85,7 @@ p{
 .level-selector{
     left: 0;
     right: 0;
-    top: 550px;
+    top: 525px;
     position: fixed;
     display: flex;
     flex-direction: column;
@@ -106,5 +106,17 @@ p{
     display: block;
     margin: 0;
     padding: 4px;
+}
+button{
+    font-family: "Patua One", serif;
+    text-transform: uppercase;
+    background-color: rgba(255,255,255,.2);
+    color: #333333;
+    border: 1px solid #333333;
+    padding: 0 12px;
+    height: 38px;
+    border-radius: 10px;
+    cursor: pointer;
+
 }
 </style>
