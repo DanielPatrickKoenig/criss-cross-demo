@@ -7,7 +7,7 @@
             :level="mode"
         />
         <div class="level-selector">
-            <p>Current Level: {{ mode }}</p>
+            <p>Current Level: {{ mode + 1 }}</p>
             <ul>
                 <li v-for="level in [0, 1, 2]" :key="level">
                     <button @click="updateLevel(level)">level {{ level + 1 }}</button>
