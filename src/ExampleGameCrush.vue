@@ -403,6 +403,10 @@ hr{
 @keyframes removal {
     0%{
         transform: translate(-50%, -50%) scale(1);
+        opacity: 0;
+    }
+    20%{
+        transform: translate(-50%, -50%) scale(1);
         opacity: 1;
     }
     100%{
