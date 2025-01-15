@@ -29,17 +29,6 @@
         <hr />
         <div class="game-container">
             <div
-                v-for="(piece, i) in game.pieces"
-                :key="`piece-${i}`"
-                :column="piece.column"
-                :row="piece.row"
-                class="game-piece"
-                :class="`block-${piece.data}`"
-                :style="{ width: `${piece.width}px`, height: `${piece.height}px`, left: `${piece.x}px`, top: `${piece.y}px` }"
-                @mousedown="onDown"
-                @touchstart="onDown"
-            />
-            <div
                 v-for="(removal, i) in currentRemovals" 
                 :key="i"
                 class="removal-graphic"
@@ -51,6 +40,17 @@
                 }"
             >
             </div>
+            <div
+                v-for="(piece, i) in game.pieces"
+                :key="`piece-${i}`"
+                :column="piece.column"
+                :row="piece.row"
+                class="game-piece"
+                :class="`block-${piece.data}`"
+                :style="{ width: `${piece.width}px`, height: `${piece.height}px`, left: `${piece.x}px`, top: `${piece.y}px` }"
+                @mousedown="onDown"
+                @touchstart="onDown"
+            />
         </div>
     </CrissCrosser>
 </template>
