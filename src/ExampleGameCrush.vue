@@ -26,6 +26,7 @@
                 </tr>
             </table>
         </div>
+        <hr />
         <div class="game-container">
             <div
                 v-for="(piece, i) in game.pieces"
@@ -38,6 +39,18 @@
                 @mousedown="onDown"
                 @touchstart="onDown"
             />
+            <div
+                v-for="(removal, i) in currentRemovals" 
+                :key="i"
+                class="removal-graphic"
+                :style="{
+                    left: `${removal.x}px`,
+                    top: `${removal.y}px`,
+                    width: `${game.pieces[0].width}px`,
+                    height: `${game.pieces[0].height}px`
+                }"
+            >
+            </div>
         </div>
     </CrissCrosser>
 </template>
@@ -47,17 +60,20 @@
     import { transpose } from 'lodash-transpose';
     import { TweenLite, Sine } from 'gsap';
     import CrissCrosser from './CrissCrosser.js';
-    import config from './config/crush.json';
+    import config from './config/crushLevels.json';
     export default {
         components: {
             CrissCrosser,
         },
         props: {
             configOverride: Object,
+            level: {
+                Number,
+                default: 0
+            }
         },
         data () {
             return {
-                config: this.configOverride ? this.configOverride : config,
                 processingMove: false,
                 animated: true,
                 movesRemaining: 20,
@@ -69,17 +85,22 @@
                 basePatterns: [],
                 bonusPattern: [],
                 validValues: [],
+                currentRemovals: [],
             };
         },
         computed: {
             game () {
                 return this.$refs.cc.game;
             },
+            config () {
+                return config[this.level];
+            },
         },
         mounted () {
             console.log(this.game);
             this.validValues = uniq(this.game.pieces.map(item => item.data));
             this.setPatterns(this.config.patterns.primary);
+            console.log(config);
         },
         methods: {
             onDown (e) {
@@ -104,6 +125,8 @@
                 this.resetValues();
                 // console.log(transpose(matrix));
                 const removals = this.updateBlocks(results);
+                this.currentRemovals = removals;
+                console.log('removals', removals);
                 this.points += flatten(results).length * this.pointsPerBlock;
                 const bonuses = this.getBonuses(foundPatterns);
                 if (bonuses) {
@@ -313,6 +336,9 @@
     bottom:0;
     background-color:rgba(0,0,0,.25);
 }
+hr{
+    margin-bottom: 10px;
+}
 .block-0::after{
     background-color: #104577;
 }
@@ -337,6 +363,9 @@
 .block-7::after{
     background-color: #fce05e;
 }
+.block-8::after{
+    background-color: #9966ff;
+}
 .pattern-container{
     display:flex;
     justify-content: center;
@@ -356,5 +385,47 @@
 }
 .game-container{
   width: 320px;
+}
+.removal-graphic{
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+
+}
+
+.removal-graphic img{
+    width: 100%;
+    height: 100%;
+}
+
+@keyframes removal {
+    0%{
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    100%{
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+    }
+}
+
+.removal-graphic::after{
+    content: '';
+    display: block;
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    background-color: transparent;
+    border-radius: 5px;
+    box-shadow: 0 0 5px 3px #ff3300, 0 0 10px 6px #ffcc00;
+    animation: removal;
+    animation-iteration-count: infinite;
+    animation-duration: .5s;
 }
 </style>
