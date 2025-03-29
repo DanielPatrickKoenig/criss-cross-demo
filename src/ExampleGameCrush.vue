@@ -6,6 +6,7 @@
         ref="cc"
         :config="config"
         @user-move="userMove"
+        class="criss-cosser"
     >
         <div class="pattern-container">
             <table
@@ -308,6 +309,11 @@
 </script>
 
 <style scoped>
+.criss-cosser{
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+}
 .game-container{
     position: relative;
 }
